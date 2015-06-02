@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "tlm_reader.h"
 
@@ -45,50 +46,156 @@ void _error_handler(int line, const char *file, char* format, ...){
 }
 
 GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
-	GENERIC_BLOCK *first_block, *work_block;
-	void *data_ptr;
-	bool main_header;
-	
-	first_block = malloc(sizeof(GENERIC_BLOCK));
-	first_block->prev=NULL;
-	first_block->next=NULL;
+    GENERIC_BLOCK *first_block, *work_block;
+    DATA_BLOCK *data;
+    void *data_ptr;
+    bool main_header;
+    
+    first_block = malloc(sizeof(GENERIC_BLOCK));
+    first_block->prev=NULL;
+    first_block->next=NULL;
 
-	data_ptr = log_data;
-	work_block = first_block;
-	main_header = true;
+    data_ptr = log_data;
+    work_block = first_block;
+    main_header = true;
 
-	while(data_ptr - log_data < log_size){
-		work_block->data = data_ptr;
+    while(data_ptr - log_data < log_size){
+        data = data_ptr;
 
-		if(work_block->data->common.timestamp == TIMESTAMP_HEADER){
-			if(main_header){
-				work_block->type = HEADER_MAIN;
-				main_header = false;
-				printf("Header Main nr=0x%02x type=0x%02x name=%s\n", work_block->data->header_main.model_number, work_block->data->header_main.model_type, work_block->data->header_main.model_name);
-			}else{
-				work_block->type = HEADER_AUX;
-				if(work_block->data->header_aux.sensor_type[0] != work_block->data->header_aux.sensor_type[1]){
-					printf("Expecting sensor_type[0] == sensor_type[1]!\n");
-				}
-				/*Seams that this is the identification of the last aux header block */
-				if(work_block->data->header_aux.sensor_type[0] == HEADER_AUX_TYPE_LAST){
-					main_header = true;
-				}
-				printf("Header Aux sensor=0x%02x 0x%02x\n", work_block->data->header_aux.sensor_type[0], work_block->data->header_aux.sensor_type[1]);
-			}
+        if(data->common.timestamp == TIMESTAMP_HEADER){
+            memcpy(&work_block->data, data, SIZE_HEADER);
 
-			data_ptr=data_ptr + SIZE_HEADER;
-		}else{
-			work_block->type=work_block->data->common.type[0];
-			printf("Data timestamp=%06i type=0x%02x\n", work_block->data->common.timestamp, work_block->type);
+            if(main_header){
+                work_block->type = HEADER_MAIN;
+                main_header = false;
+            }else{
+                work_block->type = HEADER_AUX;
+                if(work_block->data.common.type[0] != work_block->data.common.type[1]){
+                    error_handler("Expecting type[0] == type[1]!\n");
+                }
+                /*Seams that this is the identification of the last aux header block */
+                if(work_block->data.common.type[0] == ENA_LAST){
+                    main_header = true;
+                }
+                
+            }
+            
+            tlm_reader_decode_header(work_block);
 
-			data_ptr=data_ptr + SIZE_DATA;			
-		}
+            data_ptr=data_ptr + SIZE_HEADER;
+        }else{
+            memcpy(&work_block->data, data, SIZE_DATA);
 
-		work_block->next = malloc(sizeof(GENERIC_BLOCK));
-		work_block->next->prev = work_block;
-		work_block->next = work_block;
-	}
+            work_block->type=work_block->data.common.type[0];
 
-	return first_block;
+            tlm_reader_decode_data(work_block);
+
+            data_ptr=data_ptr + SIZE_DATA;            
+        }
+
+        work_block->next = malloc(sizeof(GENERIC_BLOCK));
+        work_block->next->prev = work_block;
+        work_block->next = work_block;
+    }
+
+    return first_block;
 }
+
+void tlm_reader_decode_header(GENERIC_BLOCK * block){
+    switch(block->type) {
+        case HEADER_MAIN:   
+#ifdef DEBUG  
+            printf("Header Main: model_number=0x%02x model_type=0x%02x model_name=%s\n", 
+                block->data.header_main.model_number, block->data.header_main.model_type, block->data.header_main.model_name);
+#endif
+            break;
+        case HEADER_AUX: 
+#ifdef DEBUG  
+            printf("Header Aux: ena_info=0x%02x 0x%02x\n", 
+                block->data.header_aux.ena_info[0], block->data.header_aux.ena_info[1]);
+#endif
+            break;
+        default: 
+            error_handler("block->type = 0x%02x unknown!\n", block->type);
+            break;
+    }
+
+}
+
+void tlm_reader_decode_data(GENERIC_BLOCK * block){
+#ifdef DEBUG
+    printf("Data: timestamp=%06i type=0x%02x:", block->data.common.timestamp, block->type);
+#endif
+
+    switch(block->type) {
+        case CURRENT:   
+#ifdef DEBUG
+            printf("CURRENT");
+#endif
+           
+            break;
+        case AIRSPEED: 
+#ifdef DEBUG
+            printf("AIRSPEED");
+#endif
+
+            break;
+        case ATLITUDE: 
+#ifdef DEBUG
+            printf("ATLITUDE");
+#endif
+
+            break;
+        case ACCELLERATION: 
+#ifdef DEBUG
+            printf("ACCELLERATION");
+#endif
+
+            break;
+        case JET_CAT: 
+#ifdef DEBUG
+            printf("JET_CAT");
+#endif
+
+            break;
+        case GPS1: 
+#ifdef DEBUG
+            printf("GPS1");
+#endif
+
+            break;
+        case GPS2: 
+#ifdef DEBUG
+            printf("GPS2");
+#endif
+
+            break;
+        case VARIO: 
+#ifdef DEBUG
+            printf("VARIO");
+#endif
+
+            break;
+        case RPM_TEMP_VOLT: 
+#ifdef DEBUG
+            printf("RPM_TEMP_VOLT");
+#endif
+
+            break;
+        case RX_STAT: 
+#ifdef DEBUG
+            printf("RX_STAT");
+#endif
+
+            break;
+        default: 
+            error_handler("block->type = 0x%02x unknown!\n", block->type);
+            break;
+    }
+    
+#ifdef DEBUG
+            printf("\n");
+#endif
+
+}
+
