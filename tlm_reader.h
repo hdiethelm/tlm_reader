@@ -32,19 +32,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Datatype of Block */
 enum _data_type{ 
-    HEADER_MAIN     = 0x100,
-    HEADER_AUX      = 0x101,
-    CURRENT         = 0x03,
-    POWERBOX        = 0x0A,
-    AIRSPEED        = 0x11,
-    ATLITUDE        = 0x12,
-    ACCELLERATION   = 0x14,
-    JET_CAT         = 0x15,
-    GPS1            = 0x16, 
-    GPS2            = 0x17,
-    VARIO           = 0x40,
-    RPM_TEMP_VOLT   = 0x7E,
-    RX_STAT         = 0x7F
+    HEADER_MAIN          = 0x100,
+    HEADER_AUX           = 0x101,
+    CURRENT              = 0x03,
+    POWERBOX             = 0x0A,
+    AIRSPEED             = 0x11,
+    ATLITUDE             = 0x12,
+    ACCELLERATION        = 0x14,
+    JET_CAT              = 0x15,
+    GPS1                 = 0x16, 
+    GPS2                 = 0x17,
+    VARIO                = 0x40,
+    RPM_TEMP_VOLT_TM1000 = 0x7E,
+    RX_STAT_TM1000       = 0x7F,
+    RPM_TEMP_VOLT_TM1100 = 0xFE,
+    RX_STAT_TM1100       = 0xFF
 };
 typedef enum _data_type DATA_TYPE;
 

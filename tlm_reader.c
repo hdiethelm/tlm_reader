@@ -140,6 +140,7 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
             printf("CURRENT");
 #endif
 
+            break;
         case POWERBOX:   
 #ifdef DEBUG
             printf("POWERBOX");
@@ -188,13 +189,15 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 #endif
 
             break;
-        case RPM_TEMP_VOLT: 
+        case RPM_TEMP_VOLT_TM1000:
+        case RPM_TEMP_VOLT_TM1100:
 #ifdef DEBUG
             printf("RPM_TEMP_VOLT");
 #endif
 
             break;
-        case RX_STAT: 
+        case RX_STAT_TM1000: 
+        case RX_STAT_TM1100: 
 #ifdef DEBUG
             printf("RX_STAT");
 #endif
