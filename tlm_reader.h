@@ -35,6 +35,7 @@ enum _data_type{
     HEADER_MAIN     = 0x100,
     HEADER_AUX      = 0x101,
     CURRENT         = 0x03,
+    POWERBOX        = 0x0A,
     AIRSPEED        = 0x11,
     ATLITUDE        = 0x12,
     ACCELLERATION   = 0x14,
@@ -113,6 +114,12 @@ struct _block_current {
 };
 typedef struct _block_current BLOCK_CURRENT;
 
+struct _block_powerbox {
+    uint32_t timestamp;
+    uint8_t type;    
+};
+typedef struct _block_powerbox BLOCK_POWERBOX;
+
 struct _block_airspeed {
     uint32_t timestamp;
     uint8_t type;    
@@ -175,6 +182,7 @@ union _data_block{
     BLOCK_HEADER_MAIN   header_main;
     BLOCK_HEADER_AUX    header_aux;
     BLOCK_CURRENT       current;
+    BLOCK_POWERBOX      powerbox;
     BLOCK_AIRSPEED      airspeed;
     BLOCK_ALTITUDE      altitude;
     BLOCK_ACCELLERATION acceleration;
@@ -191,6 +199,7 @@ union _decoded_block{/*
     DECODED_HEADER_MAIN   header_main;
     DECODED_HEADER_AUX    header_aux;
     DECODED_CURRENT       current;
+    DECODED_POWERBOX      powerbox;
     DECODED_AIRSPEED      airspeed;
     DECODED_ALTITUDE      altitude;
     DECODED_ACCELLERATION acceleration;
@@ -222,8 +231,19 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size);
 void tlm_reader_decode_header(GENERIC_BLOCK * block);
 void tlm_reader_decode_data(GENERIC_BLOCK * block);
 
-#define error_handler(...) _error_handler(__LINE__, __FILE__, __VA_ARGS__)
+/* Where to print errors */
+#define ERROR_FP stdout
+/*#define ERROR_FP stderr*/
+
+/* Type of error */
+enum _error_type{ 
+    E_ERROR     = 0x00,
+    E_WARNING   = 0x01
+};
+typedef enum _error_type ERROR_TYPE;
+
+#define error_handler(err, ...) _error_handler((err),__LINE__, __FILE__, __VA_ARGS__)
     
-void _error_handler(int line, const char *file, char* format, ...);
+void _error_handler(ERROR_TYPE err, int line, const char *file, char* format, ...);
 
 #endif /* TLM_READER_H_ */

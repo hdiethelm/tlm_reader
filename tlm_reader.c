@@ -31,18 +31,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define DEBUG
 
-void _error_handler(int line, const char *file, char* format, ...){
+void _error_handler(ERROR_TYPE err, int line, const char *file, char* format, ...){
 
     va_list argList;
     
-    printf("%s:%i: ", file, line);
+    if(err == E_ERROR){
+        fprintf(ERROR_FP, "Error: %s:%i: ", file, line);
+    }else if(err == E_WARNING){
+        fprintf(ERROR_FP, "Warning: %s:%i: ", file, line);
+    }else{
+        fprintf(ERROR_FP, "Unknown error code: %s:%i: ", file, line);
+    }
     
     va_start(argList, format);
-    vprintf(format, argList);
+    vfprintf(ERROR_FP, format, argList);
     va_end(argList);
 
-    exit(EXIT_FAILURE);
-    
+    if(err == E_ERROR){
+        exit(EXIT_FAILURE);
+    }
 }
 
 GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
@@ -71,7 +78,7 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
             }else{
                 work_block->type = HEADER_AUX;
                 if(work_block->data.common.type[0] != work_block->data.common.type[1]){
-                    error_handler("Expecting type[0] == type[1]!\n");
+                    error_handler(E_WARNING, "Expecting type[0] == type[1]!\n");
                 }
                 /*Seams that this is the identification of the last aux header block */
                 if(work_block->data.common.type[0] == ENA_LAST){
@@ -116,7 +123,7 @@ void tlm_reader_decode_header(GENERIC_BLOCK * block){
 #endif
             break;
         default: 
-            error_handler("block->type = 0x%02x unknown!\n", block->type);
+            error_handler(E_WARNING, "block->type = 0x%02x unknown!\n", block->type);
             break;
     }
 
@@ -132,7 +139,12 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 #ifdef DEBUG
             printf("CURRENT");
 #endif
-           
+
+        case POWERBOX:   
+#ifdef DEBUG
+            printf("POWERBOX");
+#endif       
+    
             break;
         case AIRSPEED: 
 #ifdef DEBUG
@@ -189,7 +201,7 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 
             break;
         default: 
-            error_handler("block->type = 0x%02x unknown!\n", block->type);
+            error_handler(E_WARNING, "block->type = 0x%02x unknown!\n", block->type);
             break;
     }
     

@@ -39,7 +39,7 @@ int main( int argc, const char* argv[] ){
     GENERIC_BLOCK *first_block;
 
     if(argc != 2){
-        printf("Usage: tlm_reader FILE.TML\n");
+        error_handler(E_ERROR, "Usage: tlm_reader FILE.TML\n");
         exit(EXIT_FAILURE);
     } 
     filename = argv[1];
@@ -48,22 +48,22 @@ int main( int argc, const char* argv[] ){
 
     ret=stat(filename, &st);
     if(ret != EXIT_SUCCESS){
-        error_handler("Error stat %s\n", filename);
+        error_handler(E_ERROR, "Error stat %s\n", filename);
     }
     log_size = st.st_size;
 
     log_data=malloc(log_size);
     if(log_data==NULL){
-        error_handler("Error malloc\n");
+        error_handler(E_ERROR, "Error malloc\n");
     }
 
     fp=fopen(argv[1],"r");
     if(fp==NULL){
-        error_handler("Error fopen %s\n", filename);
+        error_handler(E_ERROR, "Error fopen %s\n", filename);
     }
     ret=fread(log_data, 1, log_size, fp);
     if(ret!=log_size){
-        error_handler("Error wrong number of bytes read, should be %i is %i\n", st.st_size, ret);
+        error_handler(E_ERROR, "Error wrong number of bytes read, should be %i is %i\n", st.st_size, ret);
     }
     fclose(fp);
     
