@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include "tlm_reader.h"
 
@@ -71,6 +72,7 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
 
         if(data->common.timestamp == TIMESTAMP_HEADER){
             memcpy(&work_block->data, data, SIZE_HEADER);
+            work_block->data_size = SIZE_HEADER;
 
             if(main_header){
                 work_block->type = HEADER_MAIN;
@@ -88,17 +90,16 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
             }
             
             tlm_reader_decode_header(work_block);
-
-            data_ptr=data_ptr + SIZE_HEADER;
         }else{
             memcpy(&work_block->data, data, SIZE_DATA);
+            work_block->data_size=SIZE_DATA;
 
             work_block->type=work_block->data.common.type[0];
 
-            tlm_reader_decode_data(work_block);
-
-            data_ptr=data_ptr + SIZE_DATA;            
+            tlm_reader_decode_data(work_block);       
         }
+
+        data_ptr=data_ptr + work_block->data_size; 
 
         work_block->next = malloc(sizeof(GENERIC_BLOCK));
         work_block->next->prev = work_block;
@@ -109,21 +110,25 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size){
 }
 
 void tlm_reader_decode_header(GENERIC_BLOCK * block){
+#ifdef DEBUG
+    /*tlm_print_raw(block);*/
+#endif
+
     switch(block->type) {
         case HEADER_MAIN:   
 #ifdef DEBUG  
-            printf("Header Main: model_number=0x%02x model_type=0x%02x model_name=%s\n", 
+            printf("Header Main: model_number=0x%02X model_type=0x%02X model_name=%s\n", 
                 block->data.header_main.model_number, block->data.header_main.model_type, block->data.header_main.model_name);
 #endif
             break;
         case HEADER_AUX: 
 #ifdef DEBUG  
-            printf("Header Aux: ena_info=0x%02x 0x%02x\n", 
+            printf("Header Aux: ena_info=0x%02X 0x%02X\n", 
                 block->data.header_aux.ena_info[0], block->data.header_aux.ena_info[1]);
 #endif
             break;
         default: 
-            error_handler(E_WARNING, "block->type = 0x%02x unknown!\n", block->type);
+            error_handler(E_WARNING, "block->type = 0x%02X unknown!\n", block->type);
             break;
     }
 
@@ -131,7 +136,8 @@ void tlm_reader_decode_header(GENERIC_BLOCK * block){
 
 void tlm_reader_decode_data(GENERIC_BLOCK * block){
 #ifdef DEBUG
-    printf("Data: timestamp=%06i type=0x%02x:", block->data.common.timestamp, block->type);
+    /*tlm_print_raw(block);*/
+    printf("Data: timestamp=%06i type=0x%02X:", block->data.common.timestamp, block->type);
 #endif
 
     switch(block->type) {
@@ -139,7 +145,9 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 #ifdef DEBUG
             printf("CURRENT");
 #endif
-
+            block->decoded.current.current = (float)htons(block->data.current.current)*DECODE_CURRENT_FACTOR;
+            
+            printf(" current=0x%04X=%5.3fA", htons(block->data.current.current), block->decoded.current.current);
             break;
         case POWERBOX:   
 #ifdef DEBUG
@@ -204,7 +212,7 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 
             break;
         default: 
-            error_handler(E_WARNING, "block->type = 0x%02x unknown!\n", block->type);
+            error_handler(E_WARNING, "block->type = 0x%02X unknown!\n", block->type);
             break;
     }
     
@@ -212,5 +220,16 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
             printf("\n");
 #endif
 
+}
+
+void tlm_print_raw(GENERIC_BLOCK * block){
+    uint8_t *ptr;
+    size_t i;
+
+    ptr=(uint8_t *)&block->data;
+    for(i=0 ; i < block->data_size ; i++){
+        printf("0x%02X ", ptr[i]);
+    }
+    printf("\n");
 }
 

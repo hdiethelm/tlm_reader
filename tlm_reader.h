@@ -50,9 +50,8 @@ enum _data_type{
 };
 typedef enum _data_type DATA_TYPE;
 
-/**
- * Different data blocks----------------
- */
+/* Header Blocks ---------------------------------------------------------- */
+
 /* Not really a block, just used to access timestamp and type fields */
 struct _block_common {
     uint32_t timestamp;
@@ -88,6 +87,11 @@ struct _block_header_main {
 };
 typedef struct _block_header_main BLOCK_HEADER_MAIN;
 
+struct _decoded_header_main {
+ 
+};
+typedef struct _decoded_header_main DECODED_HEADER_MAIN;
+
 /* Enabled Info */
 enum _ena_info{
     ENA_VOLT            = 0x01,
@@ -109,48 +113,102 @@ struct _block_header_aux {
 };
 typedef struct _block_header_aux BLOCK_HEADER_AUX;
 
-/* Data Blocks */
+struct _decoded_header_aux {
+ 
+};
+typedef struct _decoded_header_aux DECODED_HEADER_AUX;
+
+/* Data Blocks ---------------------------------------------------------- */
+
+/* current ----------------------------------------------------- */
 struct _block_current {
     uint32_t timestamp;
-    uint8_t type;    
+    uint8_t type;
+    uint8_t unused1;
+    int16_t current;
+    uint8_t unused2[12];
 };
 typedef struct _block_current BLOCK_CURRENT;
 
+/* See: http://www.rcgroups.com/forums/showpost.php?p=24575795&postcount=53 */
+#define DECODE_CURRENT_FACTOR   0.196791
+
+struct _decoded_current {
+    float current;  /* In A */   
+};
+typedef struct _decoded_current DECODED_CURRENT;
+
+/* powerbox ----------------------------------------------------- */
 struct _block_powerbox {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_powerbox BLOCK_POWERBOX;
 
+struct _decoded_powerbox {
+ 
+};
+typedef struct _decoded_powerbox DECODED_POWERBOX;
+
+/* airspeed ----------------------------------------------------- */
 struct _block_airspeed {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_airspeed BLOCK_AIRSPEED;
 
+struct _decoded_airspeed {
+ 
+};
+typedef struct _decoded_airspeed DECODED_AIRSPEED;
+
+/* altitude ----------------------------------------------------- */
 struct _block_altitude {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_altitude BLOCK_ALTITUDE;
 
+struct _decoded_altitude {
+ 
+};
+typedef struct _decoded_altitude DECODED_ALTITUDE;
+
+/* acceleration -------------------------------------------------- */
 struct _block_acceleration {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_acceleration BLOCK_ACCELLERATION;
 
+struct _decoded_acceleration {
+ 
+};
+typedef struct _decoded_acceleration DECODED_ACCELLERATION;
+
+/* jet_cat ------------------------------------------------------- */
 struct _block_jet_cat {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_jet_cat BLOCK_JET_CAT;
 
+struct _decoded_jet_cat {
+ 
+};
+typedef struct _decoded_jet_cat DECODED_JET_CAT;
+
+/* gps ----------------------------------------------------- */
 struct _block_gps1 {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_gps1 BLOCK_GPS1;
+
+struct _decoded_gps1 {
+ 
+};
+typedef struct _decoded_gps1 DECODED_GPS1;
 
 struct _block_gps2 {
     uint32_t timestamp;
@@ -158,23 +216,46 @@ struct _block_gps2 {
 };
 typedef struct _block_gps2 BLOCK_GPS2;
 
+struct _decoded_gps2 {
+ 
+};
+typedef struct _decoded_gps2 DECODED_GPS2;
+
+/* vario ----------------------------------------------------- */
 struct _block_vario {
     uint32_t timestamp;
     uint8_t type;    
 };
 typedef struct _block_vario BLOCK_VARIO;
 
+struct _decoded_vario {
+ 
+};
+typedef struct _decoded_vario DECODED_VARIO;
+
+/* rpm_volt_temp ----------------------------------------------------- */
 struct _block_rpm_volt_temp {
     uint32_t timestamp;
     uint8_t type;
 };
 typedef struct _block_rpm_volt_temp BLOCK_RPM_TEMP_VOLT;
 
+struct _decoded_rpm_volt_temp {
+ 
+};
+typedef struct _decoded_rpm_volt_temp DECODED_RPM_TEMP_VOLT;
+
+/* rx_stat ----------------------------------------------------- */
 struct _block_rx_stat {
     uint32_t timestamp;
     uint8_t type;
 };
 typedef struct _block_rx_stat BLOCK_RX_STAT;
+
+struct _decoded_rx_stat {
+ 
+};
+typedef struct _decoded_rx_stat DECODED_RX_STAT;
 
 /**
  * Union for all data block types--------
@@ -197,7 +278,7 @@ union _data_block{
 };
 typedef union _data_block DATA_BLOCK;
 
-union _decoded_block{/*
+union _decoded_block{
     DECODED_HEADER_MAIN   header_main;
     DECODED_HEADER_AUX    header_aux;
     DECODED_CURRENT       current;
@@ -210,7 +291,7 @@ union _decoded_block{/*
     DECODED_GPS2          gps2;
     DECODED_VARIO         vario;
     DECODED_RPM_TEMP_VOLT rpm_volt_temp;
-    DECODED_RX_STAT       rx_stat;*/
+    DECODED_RX_STAT       rx_stat;
 };
 typedef union _decoded_block DECODED_BLOCK;
 
@@ -220,6 +301,7 @@ typedef union _decoded_block DECODED_BLOCK;
 struct _generic_block {
     DATA_TYPE       type;
     DATA_BLOCK      data;
+    size_t          data_size;
     DECODED_BLOCK   decoded;
     
     /* Linked list for blocks */
@@ -232,6 +314,8 @@ GENERIC_BLOCK *tlm_reader_read(void * log_data, size_t log_size);
 
 void tlm_reader_decode_header(GENERIC_BLOCK * block);
 void tlm_reader_decode_data(GENERIC_BLOCK * block);
+
+void tlm_print_raw(GENERIC_BLOCK * block);
 
 /* Where to print errors */
 #define ERROR_FP stdout
