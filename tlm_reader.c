@@ -26,7 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>
-#include <arpa/inet.h>
 
 #include "tlm_reader.h"
 
@@ -145,9 +144,9 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
 #ifdef DEBUG
             printf("CURRENT");
 #endif
-            block->decoded.current.current = (float)htons(block->data.current.current)*DECODE_CURRENT_FACTOR;
+            block->decoded.current.current = (float)swap_int16(block->data.current.current) * DECODE_CURRENT_FACTOR;
             
-            printf(" current=0x%04X=%5.3fA", htons(block->data.current.current), block->decoded.current.current);
+            printf(" current=0x%04X=%5.3fA", 0xFFFF & swap_int16(block->data.current.current), block->decoded.current.current);
             break;
         case POWERBOX:   
 #ifdef DEBUG
@@ -231,5 +230,31 @@ void tlm_print_raw(GENERIC_BLOCK * block){
         printf("0x%02X ", ptr[i]);
     }
     printf("\n");
+}
+
+/* Byte swap unsigned short */
+uint16_t swap_uint16( uint16_t val ) 
+{
+    return (val << 8) | (val >> 8 );
+}
+
+/* Byte swap short */
+int16_t swap_int16( int16_t val ) 
+{
+    return (val << 8) | ((val >> 8) & 0xFF);
+}
+
+/* Byte swap unsigned int */
+uint32_t swap_uint32( uint32_t val )
+{
+    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF ); 
+    return (val << 16) | (val >> 16);
+}
+
+/* Byte swap int */
+int32_t swap_int32( int32_t val )
+{
+    val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF ); 
+    return (val << 16) | ((val >> 16) & 0xFFFF);
 }
 

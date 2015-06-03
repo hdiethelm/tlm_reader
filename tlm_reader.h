@@ -317,6 +317,18 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block);
 
 void tlm_print_raw(GENERIC_BLOCK * block);
 
+/* Byte swap unsigned short */
+uint16_t swap_uint16( uint16_t val );
+
+/* Byte swap short */
+int16_t swap_int16( int16_t val );
+
+/* Byte swap unsigned int */
+uint32_t swap_uint32( uint32_t val );
+
+/* Byte swap int */
+int32_t swap_int32( int32_t val );
+
 /* Where to print errors */
 #define ERROR_FP stdout
 /*#define ERROR_FP stderr*/
