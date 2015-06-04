@@ -145,8 +145,10 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
             printf("CURRENT");
 #endif
             block->decoded.current.current = (float)swap_int16(block->data.current.current) * DECODE_CURRENT_FACTOR;
-            
-            printf(" current=0x%04X=%5.3fA", 0xFFFF & swap_int16(block->data.current.current), block->decoded.current.current);
+
+#ifdef DEBUG            
+            printf(" current=0x%04X=%.1fA", 0xFFFF & swap_int16(block->data.current.current), block->decoded.current.current);
+#endif
             break;
         case POWERBOX:   
 #ifdef DEBUG
@@ -202,11 +204,46 @@ void tlm_reader_decode_data(GENERIC_BLOCK * block){
             printf("RPM_TEMP_VOLT");
 #endif
 
+            block->decoded.rpm_volt_temp.rpm = (float)swap_uint16(block->data.rpm_volt_temp.rpm);
+            block->decoded.rpm_volt_temp.volt = (float)swap_uint16(block->data.rpm_volt_temp.volt) / 100.0;
+            block->decoded.rpm_volt_temp.temp = (float)swap_uint16(block->data.rpm_volt_temp.temp);
+
+            /* Farenheit to Celsius */
+            block->decoded.rpm_volt_temp.temp = ( block->decoded.rpm_volt_temp.temp - 32.0 ) *(5.0/9.0);
+
+#ifdef DEBUG
+            printf(" rpm=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rpm_volt_temp.rpm), block->decoded.rpm_volt_temp.rpm);
+            printf(" volt=0x%04X=%.1fV", 0xFFFF & swap_uint16(block->data.rpm_volt_temp.volt), block->decoded.rpm_volt_temp.volt);
+            printf(" temp=0x%04X=%.1fC", 0xFFFF & swap_uint16(block->data.rpm_volt_temp.temp), block->decoded.rpm_volt_temp.temp);
+#endif
+
             break;
         case RX_STAT_TM1000: 
         case RX_STAT_TM1100: 
 #ifdef DEBUG
             printf("RX_STAT");
+#endif
+
+            block->decoded.rx_stat.a_fade = swap_uint16(block->data.rx_stat.a_fade);
+            block->decoded.rx_stat.b_fade = swap_uint16(block->data.rx_stat.b_fade);
+            block->decoded.rx_stat.l_fade = swap_uint16(block->data.rx_stat.l_fade);
+            block->decoded.rx_stat.r_fade = swap_uint16(block->data.rx_stat.r_fade);
+
+            block->decoded.rx_stat.frame_loss = swap_uint16(block->data.rx_stat.frame_loss);
+            block->decoded.rx_stat.hold = swap_uint16(block->data.rx_stat.hold);
+
+            block->decoded.rx_stat.rx_volt = (float)swap_uint16(block->data.rx_stat.rx_volt) / 100.0;
+
+#ifdef DEBUG
+            printf(" a_fade=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.a_fade), block->decoded.rx_stat.a_fade);
+            printf(" b_fade=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.b_fade), block->decoded.rx_stat.b_fade);
+            printf(" l_fade=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.l_fade), block->decoded.rx_stat.l_fade);
+            printf(" r_fade=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.r_fade), block->decoded.rx_stat.r_fade);
+
+            printf(" frame_loss=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.frame_loss), block->decoded.rx_stat.frame_loss);
+            printf(" hold=0x%04X=%i", 0xFFFF & swap_uint16(block->data.rx_stat.hold), block->decoded.rx_stat.hold);
+
+            printf(" rx_volt=0x%04X=%.1fV", 0xFFFF & swap_uint16(block->data.rx_stat.rx_volt), block->decoded.rx_stat.rx_volt);
 #endif
 
             break;

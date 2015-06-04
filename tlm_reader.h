@@ -63,7 +63,7 @@ typedef struct _block_common BLOCK_COMMON;
 enum _model_type{ 
     MODEL_FIXED =       0x00,
     MODEL_HELICOPTER =  0x01,
-    MODEL_GLIDER =  0x02
+    MODEL_GLIDER =      0x02
 };
 typedef enum _model_type MODEL_TYPE;
 
@@ -237,11 +237,18 @@ typedef struct _decoded_vario DECODED_VARIO;
 struct _block_rpm_volt_temp {
     uint32_t timestamp;
     uint8_t type;
+    uint8_t unused1;
+    uint16_t rpm;
+    uint16_t volt;
+    uint16_t temp;
+    uint8_t unused2[8];
 };
 typedef struct _block_rpm_volt_temp BLOCK_RPM_TEMP_VOLT;
 
 struct _decoded_rpm_volt_temp {
- 
+    uint16_t rpm;
+    float volt;
+    float temp;
 };
 typedef struct _decoded_rpm_volt_temp DECODED_RPM_TEMP_VOLT;
 
@@ -249,11 +256,25 @@ typedef struct _decoded_rpm_volt_temp DECODED_RPM_TEMP_VOLT;
 struct _block_rx_stat {
     uint32_t timestamp;
     uint8_t type;
+    uint8_t unused1;
+    uint16_t a_fade;
+    uint16_t b_fade;
+    uint16_t l_fade;
+    uint16_t r_fade;
+    uint16_t frame_loss;
+    uint16_t hold;
+    uint16_t rx_volt;
 };
 typedef struct _block_rx_stat BLOCK_RX_STAT;
 
 struct _decoded_rx_stat {
- 
+    uint16_t a_fade;
+    uint16_t b_fade;
+    uint16_t l_fade;
+    uint16_t r_fade;
+    uint16_t frame_loss;
+    uint16_t hold;
+    float rx_volt;
 };
 typedef struct _decoded_rx_stat DECODED_RX_STAT;
 
